@@ -29,9 +29,6 @@ public class MovieCatalogResource {
     @Resource
     WebClient.Builder webClientBuilder;
 
-    @Resource
-    private DiscoveryClient discoveryClient;
-
     @RequestMapping("/{userId}")
     public List<CatalogItem> getCatalog(@PathVariable("userId") String userId) {
         UserRating userRating = restTemplate.getForObject("http://rating-service/ratingsdata/users/foo", UserRating.class);

@@ -4,7 +4,11 @@ import com.learn.swat.moviecatalog.model.CatalogItem;
 import com.learn.swat.moviecatalog.model.Movie;
 import com.learn.swat.moviecatalog.model.Rating;
 import com.learn.swat.moviecatalog.model.UserRating;
+import com.learn.swat.moviecatalog.services.MovieInfoService;
+import com.learn.swat.moviecatalog.services.UserDetailService;
 import com.netflix.discovery.DiscoveryClient;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,19 +27,29 @@ import java.util.stream.Collectors;
 public class MovieCatalogResource {
 
     @Resource
-            @Qualifier("second")
+    @Qualifier("second")
     RestTemplate restTemplate;
 
     @Resource
     WebClient.Builder webClientBuilder;
 
+    @Resource
+    MovieInfoService movieInfoService;
+
+    @Resource
+    UserDetailService userDetailService;
+
     @RequestMapping("/{userId}")
     public List<CatalogItem> getCatalog(@PathVariable("userId") String userId) {
-        UserRating userRating = restTemplate.getForObject("http://rating-service/ratingsdata/users/foo", UserRating.class);
-
-        System.out.println(userRating.getUserRatings());
+        UserRating userRating = userDetailService.getUserRating(userId);
         return userRating.getUserRatings().stream().map(rating -> {
-            Movie movie = restTemplate.getForObject("http://movie-service/movies/" + rating.getMovieId(), Movie.class);
+            return movieInfoService.getCatalogItem(rating);
+        }).collect(Collectors.toList());
+
+    }
+
+}
+
 // WebClientBuilder does not work with @loadBalanced Annotation
 
 //            Movie movie = webClientBuilder.build()
@@ -44,11 +58,3 @@ public class MovieCatalogResource {
 //                    .retrieve()
 //                    .bodyToMono(Movie.class)
 //                    .block();
-            return new CatalogItem(movie.getName(), "Test", rating.getRating());
-
-        }).collect(Collectors.toList());
-
-    }
-
-
-}

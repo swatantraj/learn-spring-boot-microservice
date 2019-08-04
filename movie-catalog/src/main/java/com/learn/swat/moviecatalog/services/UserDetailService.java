@@ -19,22 +19,24 @@ public class UserDetailService {
     @Qualifier("second")
     RestTemplate restTemplate;
 
-    @HystrixCommand(fallbackMethod = "getFallbackUserRating",
+    @HystrixCommand(fallbackMethod = "getFallbackUserRating"/*,
             commandProperties = {
             @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "2000"),
                     @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "5"),
                     @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "50"),
                     @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "5000")
-            })
+            }*/)
     public UserRating getUserRating(@PathVariable("userId") String userId) {
         UserRating userRating = restTemplate.getForObject("http://rating-service/ratingsdata/users/foo", UserRating.class);
         return userRating;
     }
 
-    private UserRating getFallbackUserRating(String userId) {
+    private UserRating getFallbackUserRating(String userId, Throwable t) {
         UserRating userRating = new UserRating();
+        System.out.println("fallback for RATING");
+        System.out.println(t.getMessage());
         userRating.setUserId(userId);
-        userRating.setUserRatings(Arrays.asList(new Rating("No Rating Found", 0)));
+        userRating.setUserRatings(Arrays.asList(new Rating("TestRating", 0)));
         return userRating;
     }
 

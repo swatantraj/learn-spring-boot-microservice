@@ -22,10 +22,12 @@ public class MovieInfoService {
     @HystrixCommand(fallbackMethod = "getFallbackCatalogItem")
     public CatalogItem getCatalogItem(Rating rating) {
         Movie movie = restTemplate.getForObject("http://movie-service/movies/" + rating.getMovieId(), Movie.class);
-        return new CatalogItem(movie.getName(), "Test", rating.getRating());
+        return new CatalogItem(movie.getName(), "Description for movie - "+movie.getName(), rating.getRating());
     }
 
-    private CatalogItem getFallbackCatalogItem(Rating rating) {
+    private CatalogItem getFallbackCatalogItem(Rating rating, Throwable t) {
+        System.out.println("fallback for CATALOG");
+        System.out.println(t.getMessage());
         return new CatalogItem("No Movie Available", "No Desc", rating.getRating());
     }
 
